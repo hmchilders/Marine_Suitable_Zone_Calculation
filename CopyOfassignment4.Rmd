@@ -106,11 +106,16 @@ To start, we need to load all necessary data and make sure it has the coordinate
 -   combine SST rasters into a raster stack\
 
 ```{r include=TRUE, warning=FALSE, messages=FALSE}
-sst_2008 <- rast(here('data','average_annual_sst_2008.tif'))
-sst_2009 <- rast(here('data','average_annual_sst_2009.tif'))
-sst_2010 <- rast(here('data','average_annual_sst_2010.tif'))
-sst_2011 <- rast(here('data','average_annual_sst_2011.tif'))
-sst_2012 <- rast(here('data','average_annual_sst_2012.tif'))
+sst_2008 <- rast(here('data','average_annual_sst_2008.tif'))%>% 
+  project(crs(depth))
+sst_2009 <- rast(here('data','average_annual_sst_2009.tif'))%>% 
+  project(crs(depth))
+sst_2010 <- rast(here('data','average_annual_sst_2010.tif'))%>% 
+  project(crs(depth))
+sst_2011 <- rast(here('data','average_annual_sst_2011.tif'))%>% 
+  project(crs(depth))
+sst_2012 <- rast(here('data','average_annual_sst_2012.tif'))%>% 
+  project(crs(depth))
 
 sst <- c(sst_2008,
          sst_2009,
@@ -126,8 +131,7 @@ plot(sst)
     -   reproject any data not in the same projection
 
 ```{r}
-depth <- rast(here('data','depth.tif')) %>% 
-  project(crs(sst_2008))
+depth <- rast(here('data','depth.tif')) 
 coast <- coast %>% 
   st_transform(crs(depth))
 ```
