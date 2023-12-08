@@ -290,7 +290,7 @@ Create the following maps:
                   fill.scale = tm_scale(breaks = c(0,1000,2000,3000,4000,5000), 
                                         values = "Greens"),
                   fill.legend = tm_legend(title = 'Suitable Area (km^2)'))+
-      tm_title(text = "Total Suitable Area by Region")+
+      tm_title(text = "Suitable Area by Region: Oysters")+
       tm_scalebar(position = c('left','bottom'))+
       tm_basemap(server = "OpenStreetMap")
       
@@ -305,7 +305,7 @@ tm_shape(zonal_rast)+
               fill.scale = tm_scale(breaks = c(0,0.5,1,2,3,4), 
                 values = "Greens"),
               fill.legend = tm_legend(title = 'Suitable Area(%)'))+
-  tm_title(text = "Percent Suitable Area by Region")+
+  tm_title(text = "Suitable Area by Region: Oysters")+
   tm_scalebar(position = c('left','bottom'))+
   tm_basemap(server = "OpenStreetMap")
 ```
@@ -320,7 +320,7 @@ Now that you've worked through the solution for one group of species, let's upda
 Run your function for a species of your choice! You can find information on species depth and temperature requirements on [SeaLifeBase](https://www.sealifebase.ca/search.php). Remember, we are thinking about the potential for marine aquaculture, so these species should have some reasonable potential for commercial consumption.
 
 ```{r}
-species_suitable_area = function(min_temp_C, max_temp_C, min_depth_m, max_depth_m){
+species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth_m, max_depth_m){
   rcl_temp <- matrix(c(-Inf, min_temp_C, NA,
                      min_temp_C, max_temp_C, 1,
                      max_temp_C, Inf, NA ), ncol = 3, byrow = TRUE)
@@ -337,9 +337,47 @@ species_suitable_area = function(min_temp_C, max_temp_C, min_depth_m, max_depth_
     x*y
     }
   species_cond <- lapp(c(temp_reclass, depth_reclass), fun = multiply)
+  mask <- mask(coast_rast, species_cond)
+  #Use the mask to crop the coastal data to our area of interest (suitable areas)
+  EEZ <- crop(mask, coast_rast) 
+  #Check that the raster was cropped correctly
+  #Use the cellSize function to fin the area of each cell
+  EEZ_area <- cellSize(EEZ)
+  #Use the zonal function to calculate the sum of the suitable areas in each region 
+  suit_zones = zonal(EEZ_area, EEZ, fun = 'sum', na.rm = TRUE) 
+  #Use the cellSize function to fin the area of each cell
+  total_area <- cellSize(coast_rast)
+  #Use the zonal function to calculate the sum of the total areas in each region 
+  zones = zonal(total_area, coast_rast, fun = 'sum', na.rm = TRUE)
   
-  mask <- mask(coast_rast, oyster_cond)
+  #Add the suitable area stats to the new variable zonal_stats
+  zonal_stats <- suit_zones %>% 
+  #Rename the area column to suitable area for clarity
+  rename(suitable_area = area) %>% 
+  #Convert to km2
+  mutate(suitable_area = (suitable_area/1000000)) %>% 
+  #Add a new column ot the dataframe using the total area stats calculated above
+  add_column(zones$area) %>% 
+  #Rename that area column to total-area for clarity
+  rename(total_area = 'zones$area') %>% 
+  #Convert to km2
+  mutate(total_area = (total_area/1000000)) %>% 
+  #Add a new column that calculates the percentage of each region thats suitable
+  mutate(pct_suitable = ((suitable_area/total_area)*100))
 
+  #Add the geometry to the zonal stats dataset by using a left joim 
+  zonal_rast <- left_join(coast, zonal_stats, by = 'rgn') 
+  return(
+  tm_shape(zonal_rast)+
+  tm_polygons(fill = c('suitable_area','pct_suitable'), fill_alpha = 0.6,
+              fill.scale = tm_scale( values = "Greens"))+
+  tm_title(text = 'Species Suitable Area')+
+  tm_scalebar(position = c('left','bottom'))+
+  tm_basemap(server = "OpenStreetMap"))
 
 }
+```
+
+```{r}
+species_suitable_area(oysters,11, 30, 0, 70)
 ```
