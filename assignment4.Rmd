@@ -131,6 +131,8 @@ coast <- coast %>%
 #st_crs(sst) == st_crs(depth)
 #st_crs(sst) == st_crs(coast)
 #st_crs(coast) == st_crs(depth)
+
+
 ```
 
 #### Process data (10 points)
@@ -186,18 +188,24 @@ In order to find suitable locations for marine aquaculture, we'll need to find l
 -   reclassify SST and depth data into locations that are suitable for oysters
 
 ```{r}
+#Create a reclassification matrix for stuitable temperatures
 rcl_temp <- matrix(c(-Inf, 11, NA,
                      11, 30, 1,
                      30, Inf, NA ), ncol = 3, byrow = TRUE)
 
+#Reclassify the temperature data
 temp_reclass <- classify(sst_stac, rcl = rcl_temp)
+#Plot to see the reclassification worked
 plot(temp_reclass)
 
+#Create a reclasification matrix for the suitable depth
 rcl_depth <- matrix(c(-Inf, -70, NA,
                       -70, 0 , 1,
                       0, Inf, NA), ncol = 3, byrow = TRUE)
 
+#Reclassify the Depth data
 depth_reclass <- classify(depth_resampl, rcl = rcl_depth)
+#Plot to see the reclassification worked
 plot(depth_reclass)
 ```
 
@@ -205,10 +213,13 @@ plot(depth_reclass)
     -   hint: create an overlay using the `lapp()` function multiplying cell values\
 
 ```{r include=TRUE}
+#create a function to multiply two inputs
 multiply = function(x,y){
   x*y
 }
+#Use Lapp to create an overlay of the reclassified data
 oyster_cond <- lapp(c(temp_reclass, depth_reclass), fun = multiply)
+#Plot the overlay to check the area
 plot(oyster_cond)
 ```
 
@@ -285,14 +296,15 @@ Create the following maps:
 -   total suitable area by region
 
     ```{r}
+    #Create a map to plot the suiatable area in km^2
     tm_shape(zonal_rast)+
-      tm_polygons(fill = 'suitable_area', fill_alpha = 0.6,
-                  fill.scale = tm_scale(breaks = c(0,1000,2000,3000,4000,5000), 
-                                        values = "Greens"),
-                  fill.legend = tm_legend(title = 'Suitable Area (km^2)'))+
-      tm_title(text = "Suitable Area by Region: Oysters")+
-      tm_scalebar(position = c('left','bottom'))+
-      tm_basemap(server = "OpenStreetMap")
+      tm_polygons(fill = 'suitable_area', fill_alpha = 0.6, #Add geometry and opacity
+                  fill.scale = tm_scale(breaks = c(0,1000,2000,3000,4000,5000), #Add breaks, and legend title
+                                        values = "YlGn"), #Add Color scheme
+                  fill.legend = tm_legend(title = 'Suitable Area (km^2)'))+ #Add legend title
+      tm_title(text = "Suitable Area by Region: Oysters")+ # Add figure title
+      tm_scalebar(position = c('left','bottom'))+ #Add a scalebar
+      tm_basemap(server = "OpenStreetMap") #Add a basemap
       
       
     ```
@@ -300,14 +312,15 @@ Create the following maps:
 -   percent suitable area by region
 
 ```{r}
+#Create a map to show the percent suitable area
 tm_shape(zonal_rast)+
-  tm_polygons(fill = 'pct_suitable', fill_alpha = 0.7,
-              fill.scale = tm_scale(breaks = c(0,0.5,1,2,3,4), 
-                values = "Greens"),
-              fill.legend = tm_legend(title = 'Suitable Area(%)'))+
-  tm_title(text = "Suitable Area by Region: Oysters")+
-  tm_scalebar(position = c('left','bottom'))+
-  tm_basemap(server = "OpenStreetMap")
+  tm_polygons(fill = 'pct_suitable', fill_alpha = 0.7, #Add geometry and opacity
+              fill.scale = tm_scale(breaks = c(0,0.5,1,2,3,4), #Add breaks
+                values = "YlGn"), #Add color scheme
+              fill.legend = tm_legend(title = 'Suitable Area(%)'))+ #Add legend title
+  tm_title(text = "Suitable Area by Region: Oysters")+ #Add figure title
+  tm_scalebar(position = c('left','bottom'))+ #Add a scalebar
+  tm_basemap(server = "OpenStreetMap") #Add a basemap
 ```
 
 #### Broaden your workflow! (40 points)
@@ -321,26 +334,28 @@ Run your function for a species of your choice! You can find information on spec
 
 ```{r}
 species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth_m, max_depth_m){
+  #Create a reclassification matrix for Temperature
   rcl_temp <- matrix(c(-Inf, min_temp_C, NA,
                      min_temp_C, max_temp_C, 1,
                      max_temp_C, Inf, NA ), ncol = 3, byrow = TRUE)
-
+  #Reclassify the temp data
   temp_reclass <- classify(sst_stac, rcl = rcl_temp)
-
+  #Create a reclassification matrix for depth
   rcl_depth <- matrix(c(-Inf, (max_depth_m*(-1)), NA,
                       (max_depth_m*(-1)), (min_depth_m*(-1)), 1,
                       (min_depth_m*(-1)), Inf, NA), ncol = 3, byrow = TRUE)
-
+  #reclassify the depth data
   depth_reclass <- classify(depth_resampl, rcl = rcl_depth)
-  
+    #Create a function to multiply two outputs
     multiply = function(x,y){
     x*y
     }
+    #Use lapp() to create an overlay from the product of the two reclassified datasets
   species_cond <- lapp(c(temp_reclass, depth_reclass), fun = multiply)
+  #Make a mask from the overlay
   mask <- mask(coast_rast, species_cond)
   #Use the mask to crop the coastal data to our area of interest (suitable areas)
   EEZ <- crop(mask, coast_rast) 
-  #Check that the raster was cropped correctly
   #Use the cellSize function to fin the area of each cell
   EEZ_area <- cellSize(EEZ)
   #Use the zonal function to calculate the sum of the suitable areas in each region 
@@ -367,17 +382,28 @@ species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth
 
   #Add the geometry to the zonal stats dataset by using a left joim 
   zonal_rast <- left_join(coast, zonal_stats, by = 'rgn') 
-  return(
-  tm_shape(zonal_rast)+
-  tm_polygons(fill = c('suitable_area','pct_suitable'), fill_alpha = 0.6,
-              fill.scale = tm_scale( values = "Greens"))+
-  tm_title(text = 'Species Suitable Area')+
-  tm_scalebar(position = c('left','bottom'))+
-  tm_basemap(server = "OpenStreetMap"))
+  
+  area_plot<- tm_shape(zonal_rast)+
+  tm_polygons(fill = 'suitable_area', fill_alpha = 0.6, #Add geometry and opacity
+              fill.scale = tm_scale(values = "YlGn"), #Add Color scheme
+              fill.legend = tm_legend(title = 'Suitable Area (km^2)'))+ #Add legend title
+  tm_title(text = paste0("Suitable Area by Region: ", species_name))+ # Add figure title
+  tm_scalebar(position = c('left','bottom'))+ #Add a scalebar
+  tm_basemap(server = "OpenStreetMap") #Add a basemap
+  
+  pct_plot <- tm_shape(zonal_rast)+
+  tm_polygons(fill = 'pct_suitable', fill_alpha = 0.7, #Add geometry and opacity
+              fill.scale = tm_scale(values = "YlGn"), #Add color scheme
+              fill.legend = tm_legend(title = 'Suitable Area(%)'))+ #Add legend title
+  tm_title(text = paste0("Suitable Area by Region: ", species_name))+ #Add figure title
+  tm_scalebar(position = c('left','bottom'))+ #Add a scalebar
+  tm_basemap(server = "OpenStreetMap") #Add a basemap
+  
+  return(list(area_plot,pct_plot))
 
 }
 ```
 
 ```{r}
-species_suitable_area(oysters,11, 30, 0, 70)
+species_suitable_area('Oysters' ,11, 30, 0, 70)
 ```
