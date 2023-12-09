@@ -1,6 +1,6 @@
 ---
 title: 'EDS 223: assignment 4'
-author: "{student name and collaborators}"
+author: "Heather Childers"
 date: "2022-11-16"
 output:
     html_document:
@@ -11,7 +11,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 getwd()
 ```
 
