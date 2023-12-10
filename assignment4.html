@@ -1567,15 +1567,7 @@ library(tmaptools)
 library(maptiles)</code></pre></li>
 <li><p>read in the shapefile for the West Coast EEZ
 (<code>wc_regions_clean.shp</code>)</p>
-<pre class="r"><code>coast &lt;- st_read(here(&#39;data&#39;, &#39;wc_regions_clean.shp&#39;))</code></pre>
-<pre><code>## Reading layer `wc_regions_clean&#39; from data source 
-##   `/Users/heatherchilders/Documents/MEDS/Courses/EDS223/Assignment4/data/wc_regions_clean.shp&#39; 
-##   using driver `ESRI Shapefile&#39;
-## Simple feature collection with 5 features and 5 fields
-## Geometry type: MULTIPOLYGON
-## Dimension:     XY
-## Bounding box:  xmin: -129.1635 ymin: 30.542 xmax: -117.097 ymax: 49.00031
-## Geodetic CRS:  WGS 84</code></pre></li>
+<pre class="r"><code>coast &lt;- st_read(here(&#39;data&#39;, &#39;wc_regions_clean.shp&#39;))</code></pre></li>
 <li><p>read in SST rasters</p>
 <ul>
 <li><code>average_annual_sst_2008.tif</code><br />

@@ -82,7 +82,7 @@ To start, we need to load all necessary data and make sure it has the coordinate
 
 -   read in the shapefile for the West Coast EEZ (`wc_regions_clean.shp`)
 
-    ```{r}
+    ```{r, results='hide'}
     coast <- st_read(here('data', 'wc_regions_clean.shp'))
     ```
 
