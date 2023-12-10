@@ -361,7 +361,7 @@ species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth
   #Use the cellSize function to fin the area of each cell
   total_area <- cellSize(coast_rast)
   #Use the zonal function to calculate the sum of the total areas in each region 
-  zones = zonal(total_area, coast_rast, fun = 'sum', na.rm = TRUE)
+  fun_zones <<- zonal(total_area, coast_rast, fun = 'sum', na.rm = TRUE)
   
   #Add the suitable area stats to the new variable zonal_stats
   zonal_stats <- suit_zones %>% 
@@ -369,10 +369,10 @@ species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth
   rename(suitable_area = area) %>% 
   #Convert to km2
   mutate(suitable_area = (suitable_area/1000000)) %>% 
-  #Add a new column ot the dataframe using the total area stats calculated above
-  add_column(zones$area) %>% 
+  #Add a new column to the dataframe using the total area stats calculated above
+  add_column(fun_zones$area) %>% 
   #Rename that area column to total-area for clarity
-  rename(total_area = 'zones$area') %>% 
+  rename(total_area = 'fun_zones$area') %>% 
   #Convert to km2
   mutate(total_area = (total_area/1000000)) %>% 
   #Add a new column that calculates the percentage of each region thats suitable
@@ -403,5 +403,5 @@ species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth
 ```
 
 ```{r}
-species_suitable_area('Oysters' ,11, 30, 0, 70)
+species_suitable_area('Squid',10, 15, 20, 180)
 ```
