@@ -1,6 +1,6 @@
 ---
 title: 'EDS 223: assignment 4'
-author: "Heather Childers"
+author: "Heather Childers and Sofia Ingersoll"
 date: "2022-11-16"
 output:
     html_document:
@@ -132,7 +132,6 @@ coast <- coast %>%
 #st_crs(sst) == st_crs(coast)
 #st_crs(coast) == st_crs(depth)
 
-
 ```
 
 #### Process data (10 points)
@@ -220,7 +219,7 @@ multiply = function(x,y){
 #Use Lapp to create an overlay of the reclassified data
 oyster_cond <- lapp(c(temp_reclass, depth_reclass), fun = multiply)
 #Plot the overlay to check the area
-plot(oyster_cond)
+plot(oyster_cond, col = 'blue')
 ```
 
 #### Determine the most suitable EEZ (20 points)
@@ -234,7 +233,6 @@ We want to determine the total suitable area within each EEZ in order to rank zo
     coast_rast <- rasterize(coast, sst, field = 'rgn')
     #Create a mask using the selected areas for suitable pyster conditions
     mask <- mask(coast_rast, oyster_cond)
-
     #Use the mask to crop the coastal data to our area of interest (suitable areas)
     EEZ <- crop(mask, coast_rast) 
     #Check that the raster was cropped correctly
