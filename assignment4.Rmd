@@ -403,5 +403,5 @@ species_suitable_area = function(species_name, min_temp_C, max_temp_C, min_depth
 ```
 
 ```{r}
-species_suitable_area('Squid',10, 15, 20, 180)
+species_suitable_area('Squid',13, 23, 3, 80)
 ```
